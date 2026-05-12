@@ -1,0 +1,42 @@
+### Maven / Java ###
+backend/target/
+backend/HELP.md
+backend/.mvn/wrapper/maven-wrapper.jar
+!backend/src/main/**/target/
+!backend/src/test/**/target/
+
+### Angular / Node ###
+frontend/dist/
+frontend/tmp/
+frontend/out-tsc/
+frontend/bazel-out/
+frontend/node_modules/
+frontend/.angular/cache/
+frontend/coverage/
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.sublime-workspace
+.classpath
+.project
+.settings
+.springBeans
+.sts4-cache
+.apt_generated
+.factorypath
+.c9/
+*.launch
+.history/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+npm-debug.log
+yarn-error.log
+*.log
