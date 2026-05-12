@@ -1,15 +1,16 @@
 package backend.repository;
 
-import backend.entity.RefreshToken;
-import backend.entity.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import backend.entity.RefreshToken;
+import backend.entity.User;
 import jakarta.transaction.Transactional;
-import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
 
-    @Transactional
+    @Transactional 
     void deleteByUser(User user);
 }
