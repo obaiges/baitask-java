@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -18,19 +18,19 @@ export class LoginComponent {
   isRegisterMode = false;
   showPassword = false;
 
-  passwordLength = computed(() => this.password.length);
-  hasMinLength = computed(() => this.password.length >= 8);
-  hasUpperCase = computed(() => /[A-Z]/.test(this.password));
-  hasLowerCase = computed(() => /[a-z]/.test(this.password));
-  hasNumber = computed(() => /\d/.test(this.password));
-  hasSpecialChar = computed(() => /[!@#$%^&*(),.?":{}|<>]/.test(this.password));
+  passwordLength(): number { return this.password.length; }
+  hasMinLength(): boolean { return this.password.length >= 8; }
+  hasUpperCase(): boolean { return /[A-Z]/.test(this.password); }
+  hasLowerCase(): boolean { return /[a-z]/.test(this.password); }
+  hasNumber(): boolean { return /\d/.test(this.password); }
+  hasSpecialChar(): boolean { return /[!@#$%^&*(),.?":{}|<>]/.test(this.password); }
 
-  passwordStrength = computed(() => {
+  passwordStrength(): string {
     const score = [this.hasMinLength(), this.hasUpperCase(), this.hasLowerCase(), this.hasNumber(), this.hasSpecialChar()].filter(Boolean).length;
     if (score <= 2) return 'weak';
     if (score <= 3) return 'medium';
     return 'strong';
-  });
+  }
 
   constructor(
     private authService: AuthService,
