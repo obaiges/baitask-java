@@ -1,10 +1,13 @@
 package backend.controller;
 
 import backend.dto.AuthResponse;
+import backend.dto.ChangePasswordRequest;
 import backend.dto.LoginRequest;
 import backend.dto.RefreshTokenRequest;
 import backend.dto.RegisterRequest;
+import backend.entity.User;
 import backend.service.AuthService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,13 +35,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        try {
-            AuthResponse response = authService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new AuthResponse(null, request.getUsername(), null, null, e.getMessage()));
+        AuthResponse response = authService.login(request);
+        if (response.getAccessToken() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
@@ -49,6 +50,17 @@ public class AuthController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new AuthResponse(null, null, null, null, e.getMessage()));
+        }
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal User user,
+                                                @RequestBody ChangePasswordRequest request) {
+        try {
+            authService.changePassword(user.getId(), request);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }
