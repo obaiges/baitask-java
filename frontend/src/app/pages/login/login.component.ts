@@ -15,7 +15,7 @@ export class LoginComponent {
   password = '';
   error = '';
   loading = false;
-  isRegisterMode = false;
+  isRegisterMode = false; 
   showPassword = false;
 
   passwordLength(): number { return this.password.length; }
