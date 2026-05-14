@@ -17,6 +17,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'MEMBER'")
+    private String role = "MEMBER";
+
+    @Column(length = 7, columnDefinition = "VARCHAR(7) DEFAULT '#667eea'")
+    private String color = "#667eea";
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id")
+    private FamilyPosition position;
+
     @Column(name = "date_add", nullable = false, updatable = false)
     private LocalDateTime dateAdd;
 
@@ -47,6 +57,12 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+    public FamilyPosition getPosition() { return position; }
+    public void setPosition(FamilyPosition position) { this.position = position; }
     public LocalDateTime getDateAdd() { return dateAdd; }
     public void setDateAdd(LocalDateTime dateAdd) { this.dateAdd = dateAdd; }
     public boolean isAccountNonLocked() { return accountNonLocked; }
