@@ -1,6 +1,7 @@
 package backend.service;
 
 import backend.dto.AuthResponse;
+import backend.dto.ChangePasswordRequest;
 import backend.dto.LoginRequest;
 import backend.dto.RegisterRequest;
 import backend.entity.RefreshToken;
@@ -48,6 +49,10 @@ public class AuthService {
         }
 
         User user = new User(request.getUsername(), passwordEncoder.encode(request.getPassword()));
+        boolean isFirstUser = userRepository.count() == 0;
+        if (isFirstUser) {
+            user.setRole("ADMIN");
+        }
         user = userRepository.save(user);
 
         String accessToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
@@ -56,10 +61,12 @@ public class AuthService {
         return new AuthResponse(user.getId(), user.getUsername(), accessToken, refreshToken, "User registered successfully");
     }
 
-    @Transactional(noRollbackFor = RuntimeException.class)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null) {
+            return new AuthResponse(null, request.getUsername(), null, null, "Invalid username or password");
+        }
 
         if (!user.isAccountNonLocked()) {
             if (user.getLockTime() != null && user.getLockTime().plusMinutes(lockDurationMinutes).isBefore(LocalDateTime.now())) {
@@ -68,7 +75,7 @@ public class AuthService {
                 user.setLockTime(null);
                 userRepository.save(user);
             } else {
-                throw new RuntimeException("Account is locked due to too many failed attempts. Try again later.");
+                return new AuthResponse(user.getId(), user.getUsername(), null, null, "Account is locked due to too many failed attempts. Try again later.");
             }
         }
 
@@ -79,7 +86,7 @@ public class AuthService {
                 user.setLockTime(LocalDateTime.now());
             }
             userRepository.save(user);
-            throw new RuntimeException("Invalid username or password");
+            return new AuthResponse(user.getId(), user.getUsername(), null, null, "Invalid username or password");
         }
 
         user.setFailedAttempt(0);
@@ -118,6 +125,19 @@ public class AuthService {
         String newRefreshToken = createRefreshToken(user);
 
         return new AuthResponse(user.getId(), user.getUsername(), newAccessToken, newRefreshToken, "Token refreshed successfully");
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     private String createRefreshToken(User user) {
