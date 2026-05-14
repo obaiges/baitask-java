@@ -39,11 +39,16 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('username');
     this.router.navigate(['/login']);
   }
 
   getAccessToken(): string | null {
     return localStorage.getItem('access_token');
+  }
+
+  getUsername(): string | null {
+    return localStorage.getItem('username');
   }
 
   isLoggedIn(): boolean {
@@ -53,6 +58,9 @@ export class AuthService {
   private handleAuthResponse(res: AuthResponse): void {
     if (res.accessToken) {
       localStorage.setItem('access_token', res.accessToken);
+    }
+    if (res.username) {
+      localStorage.setItem('username', res.username);
     }
   }
 }

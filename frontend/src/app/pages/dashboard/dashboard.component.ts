@@ -1,16 +1,10 @@
 import { Component } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { NavbarComponent } from '../../components/navbar/navbar.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [],
+  imports: [NavbarComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
-  constructor(private authService: AuthService) {}
-
-  onLogout(): void {
-    this.authService.logout();
-  }
-}
+export class DashboardComponent {}
