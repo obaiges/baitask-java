@@ -19,179 +19,477 @@
     </div>
   </div>
 
-  <div class="month-nav">
-    <button class="month-btn" (click)="prevMonth()">
+  <!-- Sub-tabs -->
+  <div class="sub-tabs">
+    <button class="sub-tab" [class.active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="15 18 9 12 15 6"/>
+        <rect x="3" y="3" width="7" height="9" rx="1"/>
+        <rect x="14" y="3" width="7" height="5" rx="1"/>
+        <rect x="14" y="12" width="7" height="9" rx="1"/>
+        <rect x="3" y="16" width="7" height="5" rx="1"/>
       </svg>
+      Dashboard
     </button>
-    <span class="month-label">{{ months[selectedMonth - 1] }} {{ selectedYear }}</span>
-    <button class="month-btn" (click)="nextMonth()">
+    <button class="sub-tab" [class.active]="activeTab === 'reports'" (click)="switchTab('reports')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="9 18 15 12 9 6"/>
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        <path d="M21 3v9h-9"/>
       </svg>
+      Reports
+    </button>
+    <button class="sub-tab" [class.active]="activeTab === 'objectives'" (click)="switchTab('objectives')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="6"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>
+      Objectives
     </button>
   </div>
 
-  @if (summary) {
-    <div class="summary-cards">
-      <div class="summary-card card-income">
-        <div class="card-top">
-          <span class="card-label">Income</span>
-          <span class="card-arrow arrow-up">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="19" x2="12" y2="5"/>
-              <polyline points="5 12 12 5 19 12"/>
-            </svg>
-          </span>
-        </div>
-        <span class="card-value">${{ summary.totalIncome.toFixed(2) }}</span>
+  <!-- ── DASHBOARD TAB ── -->
+  @if (activeTab === 'dashboard') {
+    <div class="controls-row">
+      <div class="month-nav">
+        <button class="month-btn" (click)="prevMonth()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="month-label">{{ months[selectedMonth - 1] }} {{ selectedYear }}</span>
+        <button class="month-btn" (click)="nextMonth()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
       </div>
-
-      <div class="summary-card card-expense">
-        <div class="card-top">
-          <span class="card-label">Expenses</span>
-          <span class="card-arrow arrow-down">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <polyline points="19 12 12 19 5 12"/>
-            </svg>
-          </span>
+      @if (isAdmin && members.length > 1) {
+        <div class="user-selector">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <select class="user-select" [ngModel]="selectedUserId" (ngModelChange)="onUserChange($event)">
+            @for (m of members; track m.id) {
+              <option [value]="m.id">{{ m.username }} {{ m.id === currentUserId ? '(Me)' : '' }}</option>
+            }
+          </select>
         </div>
-        <span class="card-value">${{ summary.totalExpense.toFixed(2) }}</span>
-      </div>
+      }
+    </div>
 
-      <div class="summary-card card-profit" [class.negative]="summary.profit < 0">
-        <div class="card-top">
-          <span class="card-label">Profit</span>
-          @if (summary.profit >= 0) {
+    @if (summary) {
+      <div class="summary-cards">
+        <div class="summary-card card-income">
+          <div class="card-top">
+            <span class="card-label">Income</span>
             <span class="card-arrow arrow-up">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="12" y1="19" x2="12" y2="5"/>
                 <polyline points="5 12 12 5 19 12"/>
               </svg>
             </span>
-          } @else {
+          </div>
+          <span class="card-value">${{ summary.totalIncome.toFixed(2) }}</span>
+        </div>
+        <div class="summary-card card-expense">
+          <div class="card-top">
+            <span class="card-label">Expenses</span>
             <span class="card-arrow arrow-down">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <polyline points="19 12 12 19 5 12"/>
               </svg>
             </span>
-          }
+          </div>
+          <span class="card-value">${{ summary.totalExpense.toFixed(2) }}</span>
         </div>
-        <span class="card-value">${{ summary.profit.toFixed(2) }}</span>
-      </div>
-    </div>
-
-    <div class="charts-section">
-      <div class="chart-block">
-        <div class="chart-header">
-          <h4>Income by Category</h4>
-          <button class="btn-add btn-add--green" (click)="openAddForm('INCOME')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Income
-          </button>
-        </div>
-        @if (summary.incomeByCategory.length === 0) {
-          <p class="empty-chart">No income this month</p>
-        }
-        <div class="chart-bars">
-          @for (cat of summary.incomeByCategory; track cat.category) {
-            <div class="chart-row">
-              <span class="chart-label">{{ cat.category }}</span>
-              <div class="bar-track">
-                <div class="bar-fill bar-fill--income" [style.width.%]="(cat.amount / maxCategoryAmount(summary.incomeByCategory)) * 100"></div>
-              </div>
-              <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="chart-block">
-        <div class="chart-header">
-          <h4>Expenses by Category</h4>
-          <button class="btn-add btn-add--red" (click)="openAddForm('EXPENSE')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Expense
-          </button>
-        </div>
-        @if (summary.expenseByCategory.length === 0) {
-          <p class="empty-chart">No expenses this month</p>
-        }
-        <div class="chart-bars">
-          @for (cat of summary.expenseByCategory; track cat.category) {
-            <div class="chart-row">
-              <span class="chart-label">{{ cat.category }}</span>
-              <div class="bar-track">
-                <div class="bar-fill bar-fill--expense" [style.width.%]="(cat.amount / maxCategoryAmount(summary.expenseByCategory)) * 100"></div>
-              </div>
-              <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <div class="transactions-section">
-      <div class="section-title-row">
-        <h4>Transactions ({{ totalTransactions() }})</h4>
-      </div>
-      @if (transactions.length === 0) {
-        <p class="empty-list">No transactions recorded this month</p>
-      }
-      <div class="transactions-list">
-        @for (t of transactions; track t.id) {
-          <div class="transaction-row" [class.is-income]="t.type === 'INCOME'">
-            <div class="t-icon">
-              @if (t.type === 'INCOME') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="summary-card card-profit" [class.negative]="summary.profit < 0">
+          <div class="card-top">
+            <span class="card-label">Profit</span>
+            @if (summary.profit >= 0) {
+              <span class="card-arrow arrow-up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="12" y1="19" x2="12" y2="5"/>
                   <polyline points="5 12 12 5 19 12"/>
                 </svg>
-              } @else {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              </span>
+            } @else {
+              <span class="card-arrow arrow-down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <polyline points="19 12 12 19 5 12"/>
                 </svg>
+              </span>
+            }
+          </div>
+          <span class="card-value">${{ summary.profit.toFixed(2) }}</span>
+        </div>
+      </div>
+
+      <div class="charts-section">
+        <div class="chart-block">
+          <div class="chart-header">
+            <h4>Income by Category</h4>
+            @if (isViewingOwn) {
+              <button class="btn-add btn-add--green" (click)="openAddForm('INCOME')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Income
+              </button>
+            }
+          </div>
+          @if (summary.incomeByCategory.length === 0) {
+            <p class="empty-chart">No income this month</p>
+          }
+          <div class="chart-bars">
+            @for (cat of summary.incomeByCategory; track cat.category) {
+              <div class="chart-row">
+                <span class="chart-label">{{ cat.category }}</span>
+                <div class="bar-track">
+                  <div class="bar-fill bar-fill--income" [style.width.%]="(cat.amount / maxCategoryAmount(summary.incomeByCategory)) * 100"></div>
+                </div>
+                <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="chart-block">
+          <div class="chart-header">
+            <h4>Expenses by Category</h4>
+            @if (isViewingOwn) {
+              <button class="btn-add btn-add--red" (click)="openAddForm('EXPENSE')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Expense
+              </button>
+            }
+          </div>
+          @if (summary.expenseByCategory.length === 0) {
+            <p class="empty-chart">No expenses this month</p>
+          }
+          <div class="chart-bars">
+            @for (cat of summary.expenseByCategory; track cat.category) {
+              <div class="chart-row">
+                <span class="chart-label">{{ cat.category }}</span>
+                <div class="bar-track">
+                  <div class="bar-fill bar-fill--expense" [style.width.%]="(cat.amount / maxCategoryAmount(summary.expenseByCategory)) * 100"></div>
+                </div>
+                <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="transactions-section">
+        <div class="section-title-row">
+          <h4>Transactions ({{ totalTransactions() }})</h4>
+        </div>
+        @if (transactions.length === 0) {
+          <p class="empty-list">No transactions recorded this month</p>
+        }
+        <div class="transactions-list">
+          @for (t of transactions; track t.id) {
+            <div class="transaction-row" [class.is-income]="t.type === 'INCOME'">
+              <div class="t-icon">
+                @if (t.type === 'INCOME') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <polyline points="19 12 12 19 5 12"/>
+                  </svg>
+                }
+              </div>
+              <div class="t-info">
+                <span class="t-category">{{ t.category }}</span>
+                <span class="t-desc">{{ t.description || t.type }}</span>
+              </div>
+              <span class="t-user">{{ t.username }}</span>
+              <span class="t-date">{{ t.date }}</span>
+              <span class="t-amount" [class.amount-income]="t.type === 'INCOME'" [class.amount-expense]="t.type === 'EXPENSE'">
+                {{ t.type === 'INCOME' ? '+' : '-' }}${{ t.amount.toFixed(2) }}
+              </span>
+              @if (isViewingOwn) {
+                <div class="t-actions">
+                  <button class="t-btn" (click)="openEditForm(t)" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="t-btn t-btn--danger" (click)="deleteTransaction(t)" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </div>
               }
             </div>
-            <div class="t-info">
-              <span class="t-category">{{ t.category }}</span>
-              <span class="t-desc">{{ t.description || t.type }}</span>
-            </div>
-            <span class="t-user">{{ t.username }}</span>
-            <span class="t-date">{{ t.date }}</span>
-            <span class="t-amount" [class.amount-income]="t.type === 'INCOME'" [class.amount-expense]="t.type === 'EXPENSE'">
-              {{ t.type === 'INCOME' ? '+' : '-' }}${{ t.amount.toFixed(2) }}
+          }
+        </div>
+      </div>
+    }
+  }
+
+  <!-- ── REPORTS TAB ── -->
+  @if (activeTab === 'reports') {
+    <div class="reports-section">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" class="search-input"
+               placeholder="Search transactions by description or category..."
+               [(ngModel)]="searchText"
+               (keyup.enter)="searchTransactions()" />
+        <button class="search-btn" (click)="searchTransactions()">Search</button>
+      </div>
+      @if (isAdmin && members.length > 1) {
+        <div class="user-selector reports-user-selector">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <select class="user-select" [ngModel]="selectedUserId" (ngModelChange)="onUserChange($event)">
+            @for (m of members; track m.id) {
+              <option [value]="m.id">{{ m.username }} {{ m.id === currentUserId ? '(Me)' : '' }}</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+
+    @if (hasSearched) {
+      <div class="transactions-section">
+        <div class="section-title-row">
+          <h4>{{ searchResults.length }} transaction{{ searchResults.length !== 1 ? 's' : '' }} found</h4>
+          @if (searchResults.length > 0) {
+            <span class="result-stats">
+              Income: <span class="amount-income">${{ reportsIncome().toFixed(2) }}</span> |
+              Expense: <span class="amount-expense">${{ reportsExpense().toFixed(2) }}</span>
             </span>
-            <div class="t-actions">
-              <button class="t-btn" (click)="openEditForm(t)" title="Edit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-              <button class="t-btn t-btn--danger" (click)="deleteTransaction(t)" title="Delete">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-              </button>
+          }
+        </div>
+        @if (searchResults.length === 0) {
+          <p class="empty-list">No transactions match your search</p>
+        }
+        <div class="transactions-list">
+          @for (t of searchResults; track t.id) {
+            <div class="transaction-row" [class.is-income]="t.type === 'INCOME'">
+              <div class="t-icon">
+                @if (t.type === 'INCOME') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <polyline points="19 12 12 19 5 12"/>
+                  </svg>
+                }
+              </div>
+              <div class="t-info">
+                <span class="t-category">{{ t.category }}</span>
+                <span class="t-desc">{{ t.description || t.type }}</span>
+              </div>
+              <span class="t-user">{{ t.username }}</span>
+              <span class="t-date">{{ t.date }}</span>
+              <span class="t-amount" [class.amount-income]="t.type === 'INCOME'" [class.amount-expense]="t.type === 'EXPENSE'">
+                {{ t.type === 'INCOME' ? '+' : '-' }}${{ t.amount.toFixed(2) }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (searchResults.length > 0) {
+        <div class="charts-section">
+          <div class="chart-block">
+            <h4>Income by Category</h4>
+            <div class="chart-bars">
+              @for (cat of reportsIncomeCategories(); track cat.category) {
+                <div class="chart-row">
+                  <span class="chart-label">{{ cat.category }}</span>
+                  <div class="bar-track">
+                    <div class="bar-fill bar-fill--income"
+                         [style.width.%]="(cat.amount / reportsMaxIncome()) * 100"></div>
+                  </div>
+                  <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+                </div>
+              }
+              @if (reportsIncomeCategories().length === 0) {
+                <p class="empty-chart">No income found</p>
+              }
             </div>
           </div>
-        }
+          <div class="chart-block">
+            <h4>Expenses by Category</h4>
+            <div class="chart-bars">
+              @for (cat of reportsExpenseCategories(); track cat.category) {
+                <div class="chart-row">
+                  <span class="chart-label">{{ cat.category }}</span>
+                  <div class="bar-track">
+                    <div class="bar-fill bar-fill--expense"
+                         [style.width.%]="(cat.amount / reportsMaxExpense()) * 100"></div>
+                  </div>
+                  <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+                </div>
+              }
+              @if (reportsExpenseCategories().length === 0) {
+                <p class="empty-chart">No expenses found</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="reports-welcome">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          <path d="M21 3v9h-9"/>
+        </svg>
+        <h3>Global Transaction Reports</h3>
+        <p>Search across all your transactions without date limits. See charts grouped by category and get a complete financial picture.</p>
       </div>
+    }
+  }
+
+  <!-- ── OBJECTIVES TAB ── -->
+  @if (activeTab === 'objectives') {
+    <div class="controls-row">
+      <div class="month-nav">
+        <button class="month-btn" (click)="prevMonth()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <span class="month-label">{{ months[selectedMonth - 1] }} {{ selectedYear }}</span>
+        <button class="month-btn" (click)="nextMonth()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+      @if (isAdmin && members.length > 1) {
+        <div class="user-selector">
+          <svg class="user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <select class="user-select" [ngModel]="selectedUserId" (ngModelChange)="onUserChange($event)">
+            @for (m of members; track m.id) {
+              <option [value]="m.id">{{ m.username }} {{ m.id === currentUserId ? '(Me)' : '' }}</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+
+    <div class="objectives-header">
+      <h4>Monthly Objectives</h4>
+      @if (isViewingOwn) {
+        <button class="btn-add btn-add--blue" (click)="openAddObjective()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Objective
+        </button>
+      }
+    </div>
+
+    @if (objectives.length === 0) {
+      <div class="objectives-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+        </svg>
+        <p>No objectives set for {{ months[selectedMonth - 1] }} {{ selectedYear }}.</p>
+        <p>Set a monthly expense limit, savings goal, or category limit to track your progress.</p>
+      </div>
+    }
+
+    <div class="objectives-grid">
+      @for (obj of objectives; track obj.id) {
+        <div class="objective-card" [class.status-good]="objectiveStatus(obj) === 'good'"
+             [class.status-warning]="objectiveStatus(obj) === 'warning'"
+             [class.status-danger]="objectiveStatus(obj) === 'danger'">
+          <div class="obj-top">
+            <div class="obj-info">
+              <span class="obj-type">{{ objectiveLabel(obj) }}</span>
+              @if (obj.category) {
+                <span class="obj-cat">{{ obj.category }}</span>
+              }
+            </div>
+            @if (isViewingOwn) {
+              <div class="obj-actions">
+                <button class="t-btn" (click)="openEditObjective(obj)" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="t-btn t-btn--danger" (click)="deleteObjective(obj)" title="Delete">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+          <div class="obj-progress">
+            <div class="obj-bar-track">
+              <div class="obj-bar-fill" [style.width.%]="objectiveProgress(obj)"
+                   [class.bar-good]="objectiveStatus(obj) === 'good'"
+                   [class.bar-warning]="objectiveStatus(obj) === 'warning'"
+                   [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
+            </div>
+            <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
+          </div>
+          <div class="obj-meta">
+            <span class="obj-current">${{ obj.currentAmount.toFixed(2) }}</span>
+            <span class="obj-sep">of</span>
+            <span class="obj-target">${{ obj.targetAmount.toFixed(2) }}</span>
+            <span class="obj-remaining">(${{ objectiveRemaining(obj).toFixed(2) }} {{ obj.type === 'MONTHLY_SAVINGS_GOAL' ? 'needed' : 'remaining' }})</span>
+          </div>
+          @if (objectiveStatus(obj) === 'danger') {
+            <div class="obj-alert">
+              @if (obj.type === 'MONTHLY_SAVINGS_GOAL') {
+                ⚠ Far from savings goal
+              } @else {
+                ⚠ Over budget!
+              }
+            </div>
+          }
+          @if (objectiveStatus(obj) === 'good' && objectiveProgress(obj) === 100) {
+            <div class="obj-alert obj-alert--success">
+              @if (obj.type === 'MONTHLY_SAVINGS_GOAL') {
+                ✓ Savings goal achieved!
+              } @else {
+                ✓ Within budget
+              }
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
+  <!-- ── Transaction Form Modal ── -->
   @if (showForm) {
     <div class="form-overlay" (click)="closeForm()">
       <div class="form-modal" (click)="$event.stopPropagation()">
@@ -238,6 +536,58 @@
           }
           <button class="btn-submit" (click)="submitForm()">
             {{ editingTransaction ? 'Update' : 'Add' }} Transaction
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Objective Form Modal ── -->
+  @if (showObjectiveForm) {
+    <div class="form-overlay" (click)="closeObjectiveForm()">
+      <div class="form-modal" (click)="$event.stopPropagation()">
+        <div class="form-header">
+          <h3>{{ editingObjective ? 'Edit' : 'New' }} Objective</h3>
+          <button class="form-close" (click)="closeObjectiveForm()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="form-body">
+          <div class="form-group">
+            <label>Type</label>
+            <select [(ngModel)]="objType" class="input-text">
+              @for (ot of objectiveTypes; track ot.value) {
+                <option [value]="ot.value">{{ ot.label }}</option>
+              }
+            </select>
+          </div>
+          @if (objectiveCategoryRequired()) {
+            <div class="form-group">
+              <label>Category</label>
+              <select [(ngModel)]="objCategory" class="input-text">
+                <option value="">Select category</option>
+                @for (cat of expenseCategories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+          }
+          <div class="form-group">
+            <label>Target Amount ($)</label>
+            <input type="number" step="0.01" min="0.01" [(ngModel)]="objTarget" class="input-text" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Month</label>
+            <div class="readonly-field">{{ months[selectedMonth - 1] }} {{ selectedYear }}</div>
+          </div>
+          @if (objError) {
+            <div class="form-error">{{ objError }}</div>
+          }
+          <button class="btn-submit" (click)="submitObjective()">
+            {{ editingObjective ? 'Update' : 'Create' }} Objective
           </button>
         </div>
       </div>

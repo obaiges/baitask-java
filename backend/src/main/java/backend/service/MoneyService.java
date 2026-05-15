@@ -25,52 +25,46 @@ public class MoneyService {
         this.userRepository = userRepository;
     }
 
-    public List<TransactionDTO> getTransactions(User currentUser, Integer year, Integer month) {
-        if ("ADMIN".equals(currentUser.getRole())) {
-            List<User> allUsers = userRepository.findAll();
-            List<Long> userIds = allUsers.stream().map(User::getId).toList();
-            if (year != null && month != null) {
-                LocalDate start = LocalDate.of(year, month, 1);
-                LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-                return transactionRepository.findByUserIdInAndDateBetweenOrderByDateDesc(userIds, start, end).stream().map(this::toDTO).toList();
-            }
-            return transactionRepository.findByUserIdInOrderByDateDesc(userIds).stream().map(this::toDTO).toList();
-        }
+    public List<TransactionDTO> getTransactions(User currentUser, Integer year, Integer month, String q, Long targetUserId) {
+        User target = resolveTargetUser(currentUser, targetUserId);
 
         if (year != null && month != null) {
             LocalDate start = LocalDate.of(year, month, 1);
             LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-            return transactionRepository.findByUserAndDateBetweenOrderByDateDesc(currentUser, start, end).stream().map(this::toDTO).toList();
+
+            if (q != null && !q.isBlank()) {
+                return transactionRepository
+                        .findByUserAndDateBetweenAndDescriptionContainingIgnoreCaseOrderByDateDesc(target, start, end, q)
+                        .stream().map(this::toDTO).toList();
+            }
+            return transactionRepository.findByUserAndDateBetweenOrderByDateDesc(target, start, end).stream()
+                    .map(this::toDTO).toList();
         }
-        return transactionRepository.findByUserOrderByDateDesc(currentUser).stream().map(this::toDTO).toList();
+
+        if (q != null && !q.isBlank()) {
+            return transactionRepository.findByUserOrderByDateDesc(target).stream()
+                    .filter(t -> t.getDescription() != null && t.getDescription().toLowerCase().contains(q.toLowerCase())
+                            || t.getCategory().toLowerCase().contains(q.toLowerCase()))
+                    .map(this::toDTO).toList();
+        }
+        return transactionRepository.findByUserOrderByDateDesc(target).stream()
+                .map(this::toDTO).toList();
     }
 
-    public TransactionSummaryDTO getSummary(User currentUser, Integer year, Integer month) {
+    public TransactionSummaryDTO getSummary(User currentUser, Integer year, Integer month, Long targetUserId) {
+        User target = resolveTargetUser(currentUser, targetUserId);
+
         if (year == null) year = LocalDate.now().getYear();
         if (month == null) month = LocalDate.now().getMonthValue();
 
         LocalDate start = LocalDate.of(year, month, 1);
         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
 
-        BigDecimal totalIncome;
-        BigDecimal totalExpense;
-        List<Object[]> incomeByCategoryRaw;
-        List<Object[]> expenseByCategoryRaw;
+        BigDecimal totalIncome = transactionRepository.sumByUserAndTypeBetween(target, "INCOME", start, end);
+        BigDecimal totalExpense = transactionRepository.sumByUserAndTypeBetween(target, "EXPENSE", start, end);
 
-        if ("ADMIN".equals(currentUser.getRole())) {
-            List<User> allUsers = userRepository.findAll();
-            List<Long> userIds = allUsers.stream().map(User::getId).toList();
-
-            totalIncome = transactionRepository.sumByUserIdsAndTypeBetween(userIds, "INCOME", start, end);
-            totalExpense = transactionRepository.sumByUserIdsAndTypeBetween(userIds, "EXPENSE", start, end);
-            incomeByCategoryRaw = transactionRepository.sumByCategoryForUserIdsAndTypeBetween(userIds, "INCOME", start, end);
-            expenseByCategoryRaw = transactionRepository.sumByCategoryForUserIdsAndTypeBetween(userIds, "EXPENSE", start, end);
-        } else {
-            totalIncome = transactionRepository.sumByUserAndTypeBetween(currentUser, "INCOME", start, end);
-            totalExpense = transactionRepository.sumByUserAndTypeBetween(currentUser, "EXPENSE", start, end);
-            incomeByCategoryRaw = transactionRepository.sumByCategoryForUserAndTypeBetween(currentUser, "INCOME", start, end);
-            expenseByCategoryRaw = transactionRepository.sumByCategoryForUserAndTypeBetween(currentUser, "EXPENSE", start, end);
-        }
+        List<Object[]> incomeByCategoryRaw = transactionRepository.sumByCategoryForUserAndTypeBetween(target, "INCOME", start, end);
+        List<Object[]> expenseByCategoryRaw = transactionRepository.sumByCategoryForUserAndTypeBetween(target, "EXPENSE", start, end);
 
         List<TransactionSummaryDTO.CategorySummary> incomeByCategory = incomeByCategoryRaw.stream()
                 .map(row -> new TransactionSummaryDTO.CategorySummary((String) row[0], (BigDecimal) row[1]))
@@ -152,6 +146,14 @@ public class MoneyService {
         }
 
         transactionRepository.delete(transaction);
+    }
+
+    private User resolveTargetUser(User currentUser, Long targetUserId) {
+        if ("ADMIN".equals(currentUser.getRole()) && targetUserId != null) {
+            return userRepository.findById(targetUserId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        return currentUser;
     }
 
     private TransactionDTO toDTO(Transaction t) {

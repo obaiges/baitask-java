@@ -26,17 +26,20 @@ public class MoneyController {
     @GetMapping("/transactions")
     public ResponseEntity<List<TransactionDTO>> getTransactions(
             @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) Integer month) {
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long userId) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(moneyService.getTransactions(currentUser, year, month));
+        return ResponseEntity.ok(moneyService.getTransactions(currentUser, year, month, q, userId));
     }
 
     @GetMapping("/summary")
     public ResponseEntity<TransactionSummaryDTO> getSummary(
             @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) Integer month) {
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Long userId) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(moneyService.getSummary(currentUser, year, month));
+        return ResponseEntity.ok(moneyService.getSummary(currentUser, year, month, userId));
     }
 
     @PostMapping("/transactions")
