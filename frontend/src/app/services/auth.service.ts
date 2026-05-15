@@ -15,6 +15,7 @@ export interface AuthResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  private _refreshToken: string | null = null;
 
   constructor(
     private http: HttpClient,
@@ -32,12 +33,16 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh`, { refreshToken })
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh`, { refreshToken: this._refreshToken })
       .pipe(tap(res => this.handleAuthResponse(res)));
   }
 
+  hasRefreshToken(): boolean {
+    return !!this._refreshToken;
+  }
+
   logout(): void {
+    this._refreshToken = null;
     localStorage.removeItem('access_token');
     localStorage.removeItem('username');
     this.router.navigate(['/login']);
@@ -55,9 +60,29 @@ export class AuthService {
     return !!this.getAccessToken();
   }
 
+  getTokenExpiry(): number | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000;
+    } catch {
+      return null;
+    }
+  }
+
+  isTokenExpired(): boolean {
+    const exp = this.getTokenExpiry();
+    if (exp === null) return true;
+    return Date.now() >= exp - 60000;
+  }
+
   private handleAuthResponse(res: AuthResponse): void {
     if (res.accessToken) {
       localStorage.setItem('access_token', res.accessToken);
+    }
+    if (res.refreshToken) {
+      this._refreshToken = res.refreshToken;
     }
     if (res.username) {
       localStorage.setItem('username', res.username);
