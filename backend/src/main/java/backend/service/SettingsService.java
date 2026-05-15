@@ -45,20 +45,19 @@ public class SettingsService {
 
     @Transactional
     public FamilyMemberDTO updateMember(Long id, UpdateMemberRequest request, User requestingUser) {
-        if (request.getPositionId() != null && !"ADMIN".equals(requestingUser.getRole())) {
-            throw new RuntimeException("Only ADMIN can change member position");
-        }
-
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
+        boolean changingPosition = false;
+
         if (request.getPositionId() != null) {
+            if (!"ADMIN".equals(requestingUser.getRole())) {
+                throw new RuntimeException("Only ADMIN can change member position");
+            }
             FamilyPosition position = familyPositionRepository.findById(request.getPositionId())
                     .orElseThrow(() -> new RuntimeException("Position not found"));
             user.setPosition(position);
-        } else if (request.getPositionId() == null && request.getColor() == null && request.getRole() == null) {
-            // explicitly setting position to null
-            user.setPosition(null);
+            changingPosition = true;
         }
 
         if (request.getColor() != null) {
@@ -68,6 +67,13 @@ public class SettingsService {
         if (request.getRole() != null) {
             validateRole(request.getRole());
             user.setRole(request.getRole());
+        }
+
+        if (!changingPosition && request.getColor() == null && request.getRole() == null) {
+            if (!"ADMIN".equals(requestingUser.getRole())) {
+                throw new RuntimeException("Only ADMIN can change member position");
+            }
+            user.setPosition(null);
         }
 
         userRepository.save(user);

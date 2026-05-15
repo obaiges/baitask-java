@@ -71,7 +71,16 @@
                           <span class="member-badge--you">You</span>
                         }
                       </span>
-                      <span class="member-position">{{ member.positionName || 'No position' }}</span>
+                      @if (isAdmin()) {
+                        <select class="position-select" (change)="updatePosition(member, $event)">
+                          <option value="" [selected]="!member.positionId">No position</option>
+                          @for (pos of positions; track pos.id) {
+                            <option [value]="pos.id" [selected]="member.positionId === pos.id">{{ pos.name }}</option>
+                          }
+                        </select>
+                      } @else {
+                        <span class="member-position">{{ member.positionName || 'No position' }}</span>
+                      }
                     </div>
                   </div>
                   <div class="member-actions">
