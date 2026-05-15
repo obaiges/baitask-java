@@ -86,6 +86,9 @@ export class DashboardComponent implements OnInit {
   private loadMonthlyProfit(): void {
     const y = this.now.getFullYear();
     const m = this.now.getMonth() + 1;
-    this.moneyService.getSummary(y, m).subscribe(s => this.monthlySummary = s);
+    this.moneyService.getSummary(y, m).subscribe({
+      next: s => this.monthlySummary = s,
+      error: () => this.monthlySummary = null,
+    });
   }
 }
