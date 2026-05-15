@@ -18,7 +18,7 @@ public class Objective {
     @Column(length = 50)
     private String category;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private String type;
 
     @Column(nullable = false, precision = 12, scale = 2)
