@@ -51,6 +51,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        long expiresAt = jwtUtils.getExpirationFromToken(token);
+        long timeToExpiry = expiresAt - System.currentTimeMillis();
+
+        if (timeToExpiry < 300000) {
+            String newToken = jwtUtils.generateAccessToken(user.getId(), user.getUsername());
+            response.setHeader("X-Access-Token", newToken);
+        }
+
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(user, null, java.util.Collections.emptyList());
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

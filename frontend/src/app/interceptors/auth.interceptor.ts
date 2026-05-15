@@ -1,7 +1,7 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { BehaviorSubject, catchError, filter, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, filter, switchMap, tap, throwError } from 'rxjs';
 
 let isRefreshing = false;
 const refreshSubject = new BehaviorSubject<string | null>(null);
@@ -12,14 +12,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (authService.isTokenExpired() && authService.hasRefreshToken()) {
     return refreshAccessToken(authService).pipe(
       switchMap(newToken => {
-        if (newToken) {
-          const cloned = req.clone({
-            setHeaders: { Authorization: `Bearer ${newToken}` },
-          });
-          return next(cloned);
+        if (!newToken) {
+          authService.logout();
+          return throwError(() => new Error('Session expired'));
         }
-        authService.logout();
-        return throwError(() => new Error('Session expired'));
+        const cloned = req.clone({
+          setHeaders: { Authorization: `Bearer ${newToken}` },
+        });
+        return next(cloned).pipe(tap(event => saveNewToken(event, authService)));
       }),
     );
   }
@@ -32,32 +32,42 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   return next(req).pipe(
+    tap(event => saveNewToken(event, authService)),
     catchError((error: HttpErrorResponse) => {
+      if (error.status === 403 && authService.hasRefreshToken()) {
+        return refreshAccessToken(authService).pipe(
+          switchMap(newToken => {
+            if (!newToken) {
+              authService.logout();
+              return throwError(() => error);
+            }
+            const cloned = req.clone({
+              setHeaders: { Authorization: `Bearer ${newToken}` },
+            });
+            return next(cloned).pipe(tap(event => saveNewToken(event, authService)));
+          }),
+          catchError(() => {
+            authService.logout();
+            return throwError(() => error);
+          }),
+        );
+      }
       if (error.status === 403) {
-        if (authService.hasRefreshToken()) {
-          return refreshAccessToken(authService).pipe(
-            switchMap(newToken => {
-              if (newToken) {
-                const cloned = req.clone({
-                  setHeaders: { Authorization: `Bearer ${newToken}` },
-                });
-                return next(cloned);
-              }
-              authService.logout();
-              return throwError(() => error);
-            }),
-            catchError(() => {
-              authService.logout();
-              return throwError(() => error);
-            }),
-          );
-        }
         authService.logout();
       }
       return throwError(() => error);
     }),
   );
 };
+
+function saveNewToken(event: any, authService: AuthService): void {
+  if (event instanceof HttpResponse) {
+    const newToken = event.headers.get('X-Access-Token');
+    if (newToken && authService.getAccessToken()) {
+      localStorage.setItem('access_token', newToken);
+    }
+  }
+}
 
 function refreshAccessToken(authService: AuthService) {
   if (!isRefreshing) {

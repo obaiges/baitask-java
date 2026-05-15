@@ -62,7 +62,20 @@ public class JwtUtils {
         }
     }
 
+    public long getAccessTokenExpMs() {
+        return accessTokenExpMs;
+    }
+
     public long getRefreshTokenExpMs() {
         return refreshTokenExpMs;
+    }
+
+    public long getExpirationFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.getExpiration().getTime();
     }
 }
