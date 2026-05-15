@@ -5,7 +5,7 @@ import { ProfitWidgetComponent } from '../../components/widgets/profit-widget.co
 import { AuthService } from '../../services/auth.service';
 import { MoneyService } from './sections/money/money.service';
 import { filter } from 'rxjs';
-import { TransactionSummary } from './sections/money/money.models';
+import { TransactionSummary, Objective } from './sections/money/money.models';
 
 interface Section {
   id: string;
@@ -26,6 +26,8 @@ export class DashboardComponent implements OnInit {
   showMenu = true;
   username: string | null;
   monthlySummary: TransactionSummary | null = null;
+  objectives: Objective[] = [];
+  objectivesOnTrack = 0;
 
   sections: Section[] = [
     {
@@ -89,6 +91,18 @@ export class DashboardComponent implements OnInit {
     this.moneyService.getSummary(y, m).subscribe({
       next: s => this.monthlySummary = s,
       error: () => this.monthlySummary = null,
+    });
+    this.moneyService.getObjectives(m, y).subscribe({
+      next: obj => {
+        this.objectives = obj;
+        this.objectivesOnTrack = obj.filter(o => {
+          if (o.type === 'MONTHLY_SAVINGS_GOAL') {
+            return o.currentAmount >= o.targetAmount;
+          }
+          return o.currentAmount / o.targetAmount <= 0.6;
+        }).length;
+      },
+      error: () => { this.objectives = []; this.objectivesOnTrack = 0; },
     });
   }
 }

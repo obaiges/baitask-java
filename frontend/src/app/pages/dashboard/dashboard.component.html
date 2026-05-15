@@ -74,7 +74,11 @@
       </div>
       <div class="widgets-grid">
         @if (monthlySummary) {
-          <app-profit-widget [amount]="monthlySummary.profit" />
+          <app-profit-widget
+            [amount]="monthlySummary.profit"
+            [objectivesOnTrack]="objectivesOnTrack"
+            [objectivesTotal]="objectives.length"
+          />
         }
       </div>
     </div>
