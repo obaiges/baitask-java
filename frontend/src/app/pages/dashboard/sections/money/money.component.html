@@ -1,0 +1,246 @@
+<div class="money-view">
+  <div class="money-header">
+    <a class="back-link" routerLink="/dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Back
+    </a>
+    <div class="header-title">
+      <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+        <line x1="1" y1="10" x2="23" y2="10"/>
+        <path d="M18 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
+      </svg>
+      <div>
+        <h2>Money Management</h2>
+        <p>Income, expenditure, and month overview</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="month-nav">
+    <button class="month-btn" (click)="prevMonth()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="month-label">{{ months[selectedMonth - 1] }} {{ selectedYear }}</span>
+    <button class="month-btn" (click)="nextMonth()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  </div>
+
+  @if (summary) {
+    <div class="summary-cards">
+      <div class="summary-card card-income">
+        <div class="card-top">
+          <span class="card-label">Income</span>
+          <span class="card-arrow arrow-up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="19" x2="12" y2="5"/>
+              <polyline points="5 12 12 5 19 12"/>
+            </svg>
+          </span>
+        </div>
+        <span class="card-value">${{ summary.totalIncome.toFixed(2) }}</span>
+      </div>
+
+      <div class="summary-card card-expense">
+        <div class="card-top">
+          <span class="card-label">Expenses</span>
+          <span class="card-arrow arrow-down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <polyline points="19 12 12 19 5 12"/>
+            </svg>
+          </span>
+        </div>
+        <span class="card-value">${{ summary.totalExpense.toFixed(2) }}</span>
+      </div>
+
+      <div class="summary-card card-profit" [class.negative]="summary.profit < 0">
+        <div class="card-top">
+          <span class="card-label">Profit</span>
+          @if (summary.profit >= 0) {
+            <span class="card-arrow arrow-up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </span>
+          } @else {
+            <span class="card-arrow arrow-down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </span>
+          }
+        </div>
+        <span class="card-value">${{ summary.profit.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="charts-section">
+      <div class="chart-block">
+        <div class="chart-header">
+          <h4>Income by Category</h4>
+          <button class="btn-add btn-add--green" (click)="openAddForm('INCOME')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Income
+          </button>
+        </div>
+        @if (summary.incomeByCategory.length === 0) {
+          <p class="empty-chart">No income this month</p>
+        }
+        <div class="chart-bars">
+          @for (cat of summary.incomeByCategory; track cat.category) {
+            <div class="chart-row">
+              <span class="chart-label">{{ cat.category }}</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-fill--income" [style.width.%]="(cat.amount / maxCategoryAmount(summary.incomeByCategory)) * 100"></div>
+              </div>
+              <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-header">
+          <h4>Expenses by Category</h4>
+          <button class="btn-add btn-add--red" (click)="openAddForm('EXPENSE')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Expense
+          </button>
+        </div>
+        @if (summary.expenseByCategory.length === 0) {
+          <p class="empty-chart">No expenses this month</p>
+        }
+        <div class="chart-bars">
+          @for (cat of summary.expenseByCategory; track cat.category) {
+            <div class="chart-row">
+              <span class="chart-label">{{ cat.category }}</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-fill--expense" [style.width.%]="(cat.amount / maxCategoryAmount(summary.expenseByCategory)) * 100"></div>
+              </div>
+              <span class="chart-amount">${{ cat.amount.toFixed(0) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="transactions-section">
+      <div class="section-title-row">
+        <h4>Transactions ({{ totalTransactions() }})</h4>
+      </div>
+      @if (transactions.length === 0) {
+        <p class="empty-list">No transactions recorded this month</p>
+      }
+      <div class="transactions-list">
+        @for (t of transactions; track t.id) {
+          <div class="transaction-row" [class.is-income]="t.type === 'INCOME'">
+            <div class="t-icon">
+              @if (t.type === 'INCOME') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="19" x2="12" y2="5"/>
+                  <polyline points="5 12 12 5 19 12"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <polyline points="19 12 12 19 5 12"/>
+                </svg>
+              }
+            </div>
+            <div class="t-info">
+              <span class="t-category">{{ t.category }}</span>
+              <span class="t-desc">{{ t.description || t.type }}</span>
+            </div>
+            <span class="t-user">{{ t.username }}</span>
+            <span class="t-date">{{ t.date }}</span>
+            <span class="t-amount" [class.amount-income]="t.type === 'INCOME'" [class.amount-expense]="t.type === 'EXPENSE'">
+              {{ t.type === 'INCOME' ? '+' : '-' }}${{ t.amount.toFixed(2) }}
+            </span>
+            <div class="t-actions">
+              <button class="t-btn" (click)="openEditForm(t)" title="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button class="t-btn t-btn--danger" (click)="deleteTransaction(t)" title="Delete">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showForm) {
+    <div class="form-overlay" (click)="closeForm()">
+      <div class="form-modal" (click)="$event.stopPropagation()">
+        <div class="form-header">
+          <h3>{{ editingTransaction ? 'Edit' : 'Add' }} {{ formType === 'INCOME' ? 'Income' : 'Expense' }}</h3>
+          <button class="form-close" (click)="closeForm()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="form-body">
+          <div class="form-group">
+            <label>Type</label>
+            <div class="type-toggle">
+              <button class="type-btn" [class.active]="formType === 'EXPENSE'" (click)="formType = 'EXPENSE'">Expense</button>
+              <button class="type-btn" [class.active]="formType === 'INCOME'" (click)="formType = 'INCOME'">Income</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Amount ($)</label>
+            <input type="number" step="0.01" min="0.01" [(ngModel)]="formAmount" class="input-text" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select [(ngModel)]="formCategory" class="input-text">
+              <option value="">Select category</option>
+              @for (cat of formType === 'INCOME' ? incomeCategories : expenseCategories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" [(ngModel)]="formDescription" class="input-text" placeholder="Optional description" />
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="formDate" class="input-text" />
+          </div>
+          @if (formError) {
+            <div class="form-error">{{ formError }}</div>
+          }
+          <button class="btn-submit" (click)="submitForm()">
+            {{ editingTransaction ? 'Update' : 'Add' }} Transaction
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
