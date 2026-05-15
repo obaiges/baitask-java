@@ -1,7 +1,67 @@
 <app-navbar />
+
 <div class="dashboard-wrapper">
-  <div class="dashboard-card">
-    <h1>Dashboard</h1>
-    <p>You are logged in!</p>
-  </div>
+  @if (showMenu) {
+    <div class="welcome-section">
+      <h1 class="welcome-title">Welcome back, {{ username }}!</h1>
+      <p class="welcome-subtitle">What would you like to work on today?</p>
+    </div>
+
+    <div class="sections-grid">
+      @for (section of sections; track section.id) {
+        <a class="section-card" [routerLink]="section.route" [style.--card-accent]="section.color">
+          <div class="card-icon-wrapper" [style.background]="section.color + '15'">
+            <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" [style.color]="section.color">
+              @switch (section.icon) {
+                @case ('checklist') {
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                  <rect x="9" y="3" width="6" height="4" rx="1"/>
+                  <path d="M9 14l2 2 4-4"/>
+                }
+                @case ('calendar') {
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <circle cx="12" cy="15" r="1"/>
+                  <circle cx="16" cy="15" r="1"/>
+                  <circle cx="8" cy="15" r="1"/>
+                }
+                @case ('home') {
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                }
+                @case ('food') {
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                  <line x1="6" y1="1" x2="6" y2="4"/>
+                  <line x1="10" y1="1" x2="10" y2="4"/>
+                  <line x1="14" y1="1" x2="14" y2="4"/>
+                }
+                @case ('cart') {
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                }
+                @case ('wallet') {
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                  <path d="M18 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
+                }
+              }
+            </svg>
+          </div>
+          <div class="card-text">
+            <span class="card-title">{{ section.title }}</span>
+            <span class="card-desc">{{ section.description }}</span>
+          </div>
+          <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+      }
+    </div>
+  }
+
+  <router-outlet />
 </div>

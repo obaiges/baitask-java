@@ -3,9 +3,11 @@ package backend.controller;
 import backend.dto.FamilyMemberDTO;
 import backend.dto.FamilyPositionDTO;
 import backend.dto.UpdateMemberRequest;
+import backend.entity.User;
 import backend.service.SettingsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,7 +37,8 @@ public class SettingsController {
     public ResponseEntity<FamilyMemberDTO> updateMember(@PathVariable Long id,
                                                          @RequestBody UpdateMemberRequest request) {
         try {
-            FamilyMemberDTO updated = settingsService.updateMember(id, request);
+            User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            FamilyMemberDTO updated = settingsService.updateMember(id, request, currentUser);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

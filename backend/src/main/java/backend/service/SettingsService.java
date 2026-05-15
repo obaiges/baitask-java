@@ -44,7 +44,11 @@ public class SettingsService {
     }
 
     @Transactional
-    public FamilyMemberDTO updateMember(Long id, UpdateMemberRequest request) {
+    public FamilyMemberDTO updateMember(Long id, UpdateMemberRequest request, User requestingUser) {
+        if (request.getPositionId() != null && !"ADMIN".equals(requestingUser.getRole())) {
+            throw new RuntimeException("Only ADMIN can change member position");
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
 
