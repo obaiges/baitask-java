@@ -40,8 +40,7 @@ export const routes: Routes = [
       },
       {
         path: 'money',
-        loadComponent: () => import('./pages/dashboard/sections/section-placeholder.component').then(m => m.SectionPlaceholderComponent),
-        data: { title: 'Money Management', description: 'Income, expenditure, and month overview', icon: 'wallet', color: '#8b5cf6' },
+        loadComponent: () => import('./pages/dashboard/sections/money/money.component').then(m => m.MoneyComponent),
       },
     ],
   },

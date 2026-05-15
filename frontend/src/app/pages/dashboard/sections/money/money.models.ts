@@ -39,6 +39,26 @@ export const INCOME_CATEGORIES = [
   'Salary', 'Freelance', 'Investments', 'Gifts', 'Other',
 ];
 
+export interface Objective {
+  id: number;
+  userId: number;
+  username: string;
+  category: string | null;
+  type: 'MONTHLY_EXPENSE_LIMIT' | 'MONTHLY_SAVINGS_GOAL' | 'CATEGORY_LIMIT';
+  targetAmount: number;
+  currentAmount: number;
+  month: number;
+  year: number;
+}
+
+export interface CreateObjectiveRequest {
+  category?: string;
+  type: string;
+  targetAmount: number;
+  month: number;
+  year: number;
+}
+
 export const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
