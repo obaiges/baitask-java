@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { SettingsComponent } from '../settings/settings.component';
 
@@ -8,11 +8,19 @@ import { SettingsComponent } from '../settings/settings.component';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   dropdownOpen = false;
   settingsOpen = false;
+  isDarkTheme = false;
 
   constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.isDarkTheme = localStorage.getItem('theme') === 'dark';
+    if (this.isDarkTheme) {
+      document.documentElement.classList.add('dark-theme');
+    }
+  }
 
   get username(): string | null {
     return this.authService.getUsername();
@@ -29,6 +37,18 @@ export class NavbarComponent {
 
   closeSettings(): void {
     this.settingsOpen = false;
+  }
+
+  toggleTheme(): void {
+    this.dropdownOpen = false;
+    this.isDarkTheme = !this.isDarkTheme;
+    if (this.isDarkTheme) {
+      document.documentElement.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
   }
 
   onLogout(): void {

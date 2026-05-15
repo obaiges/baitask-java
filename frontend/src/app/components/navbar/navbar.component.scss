@@ -199,3 +199,41 @@
   background: var(--color-error-bg);
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
+
+.theme-icon-wrapper {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.theme-icon-wrapper .sun-icon,
+.theme-icon-wrapper .moon-icon {
+  position: absolute;
+  inset: 0;
+  width: 18px;
+  height: 18px;
+  transition: opacity 0.35s ease, transform 0.4s ease;
+}
+
+.theme-icon-wrapper .sun-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  color: #f59e0b;
+}
+
+.theme-icon-wrapper .moon-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+  color: #a78bfa;
+}
+
+.theme-icon-wrapper.dark .sun-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+
+.theme-icon-wrapper.dark .moon-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
