@@ -398,7 +398,17 @@
     </div>
 
     <div class="objectives-header">
-      <h4>{{ months[selectedMonth - 1] }} {{ selectedYear }} Objectives</h4>
+      <div class="objectives-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+        </svg>
+        <div>
+          <h4>{{ months[selectedMonth - 1] }} Objectives</h4>
+          <p>{{ objectives.length }} objective{{ objectives.length !== 1 ? 's' : '' }} set</p>
+        </div>
+      </div>
       @if (isViewingOwn) {
         <button class="btn-add btn-add--blue" (click)="openAddObjective()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -409,6 +419,29 @@
         </button>
       }
     </div>
+
+    @if (objectives.length > 0) {
+      <div class="obj-summary-bar">
+        @if (objectivesByType('MONTHLY_EXPENSE_LIMIT').length > 0) {
+          <div class="obj-summary-item">
+            <span class="obj-summary-dot dot-expense"></span>
+            <span>{{ objectivesByType('MONTHLY_EXPENSE_LIMIT').length }} Expense</span>
+          </div>
+        }
+        @if (objectivesByType('MONTHLY_SAVINGS_GOAL').length > 0) {
+          <div class="obj-summary-item">
+            <span class="obj-summary-dot dot-savings"></span>
+            <span>{{ objectivesByType('MONTHLY_SAVINGS_GOAL').length }} Savings</span>
+          </div>
+        }
+        @if (objectivesByType('CATEGORY_LIMIT').length > 0) {
+          <div class="obj-summary-item">
+            <span class="obj-summary-dot dot-category"></span>
+            <span>{{ objectivesByType('CATEGORY_LIMIT').length }} Category</span>
+          </div>
+        }
+      </div>
+    }
 
     @if (objectives.length === 0) {
       <div class="objectives-empty">
@@ -423,33 +456,79 @@
     }
 
     @if (objectives.length > 0) {
-      <div class="obj-group">
+      <div class="obj-groups">
         @if (objectivesByType('MONTHLY_EXPENSE_LIMIT').length > 0) {
-          <div class="obj-group-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-            Expense Limits
-          </div>
-          <div class="objectives-grid">
-            @for (obj of objectivesByType('MONTHLY_EXPENSE_LIMIT'); track obj.id) {
-              <div class="objective-card" [class.status-good]="objectiveStatus(obj) === 'good'"
-                   [class.status-warning]="objectiveStatus(obj) === 'warning'"
-                   [class.status-danger]="objectiveStatus(obj) === 'danger'">
-                <div class="obj-top">
-                  <div class="obj-info">
-                    <span class="obj-type">{{ objectiveLabel(obj) }}</span>
-                    @if (obj.category) { <span class="obj-cat">{{ obj.category }}</span> }
+          <div class="obj-group">
+            <div class="obj-group-header obj-group-header--expense">
+              <div class="ogh-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="ogh-text">
+                <h5>Expense Limits</h5>
+                <p>Monthly spending caps to keep your finances in check</p>
+              </div>
+              <span class="ogh-count">{{ objectivesByType('MONTHLY_EXPENSE_LIMIT').length }}</span>
+            </div>
+            <div class="objectives-grid">
+              @for (obj of objectivesByType('MONTHLY_EXPENSE_LIMIT'); track obj.id) {
+                <div class="objective-card objective-card--expense"
+                     [class.status-good]="objectiveStatus(obj) === 'good'"
+                     [class.status-warning]="objectiveStatus(obj) === 'warning'"
+                     [class.status-danger]="objectiveStatus(obj) === 'danger'">
+                  <div class="obj-top">
+                    <div class="obj-info">
+                      <span class="obj-type">{{ obj.category || 'Total Expenses' }}</span>
+                      <span class="obj-label">Expense Limit</span>
+                    </div>
+                    <div class="obj-status">
+                      @if (objectiveStatus(obj) === 'good') {
+                        <span class="status-badge status-good">On Track</span>
+                      } @else if (objectiveStatus(obj) === 'warning') {
+                        <span class="status-badge status-warning">Warning</span>
+                      } @else {
+                        <span class="status-badge status-danger">Over Budget</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="obj-progress">
+                    <div class="obj-bar-track">
+                      <div class="obj-bar-fill"
+                           [style.width.%]="objectiveProgress(obj)"
+                           [class.bar-good]="objectiveStatus(obj) === 'good'"
+                           [class.bar-warning]="objectiveStatus(obj) === 'warning'"
+                           [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
+                      <div class="obj-bar-threshold" [style.left.%]="85"></div>
+                    </div>
+                    <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
+                  </div>
+                  <div class="obj-amounts">
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Spent</span>
+                      <span class="oa-value oa-current">${{ obj.currentAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Limit</span>
+                      <span class="oa-value oa-target">${{ obj.targetAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Remaining</span>
+                      <span class="oa-value" [class.text-green]="objectiveRemaining(obj) > 0"
+                           [class.text-red]="objectiveRemaining(obj) <= 0">
+                        ${{ objectiveRemaining(obj).toFixed(2) }}
+                      </span>
+                    </div>
                   </div>
                   @if (isViewingOwn) {
                     <div class="obj-actions">
-                      <button class="t-btn" (click)="openEditObjective(obj)" title="Edit">
+                      <button class="obj-action-btn" (click)="openEditObjective(obj)" title="Edit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button class="t-btn t-btn--danger" (click)="deleteObjective(obj)" title="Delete">
+                      <button class="obj-action-btn obj-action-btn--danger" (click)="deleteObjective(obj)" title="Delete">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -458,59 +537,84 @@
                     </div>
                   }
                 </div>
-                <div class="obj-progress">
-                  <div class="obj-bar-track">
-                    <div class="obj-bar-fill" [style.width.%]="objectiveProgress(obj)"
-                         [class.bar-good]="objectiveStatus(obj) === 'good'"
-                         [class.bar-warning]="objectiveStatus(obj) === 'warning'"
-                         [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
-                  </div>
-                  <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
-                </div>
-                <div class="obj-meta">
-                  <span class="obj-current">${{ obj.currentAmount.toFixed(2) }}</span>
-                  <span class="obj-sep">of</span>
-                  <span class="obj-target">${{ obj.targetAmount.toFixed(2) }}</span>
-                  <span class="obj-remaining">(${{ objectiveRemaining(obj).toFixed(2) }} remaining)</span>
-                </div>
-                @if (objectiveStatus(obj) === 'danger') {
-                  <div class="obj-alert">⚠ Over budget!</div>
-                }
-                @if (objectiveStatus(obj) === 'good' && objectiveProgress(obj) === 100) {
-                  <div class="obj-alert obj-alert--success">✓ Within budget</div>
-                }
-              </div>
-            }
+              }
+            </div>
           </div>
         }
 
         @if (objectivesByType('MONTHLY_SAVINGS_GOAL').length > 0) {
-          <div class="obj-group-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-            Savings Goals
-          </div>
-          <div class="objectives-grid">
-            @for (obj of objectivesByType('MONTHLY_SAVINGS_GOAL'); track obj.id) {
-              <div class="objective-card" [class.status-good]="objectiveStatus(obj) === 'good'"
-                   [class.status-warning]="objectiveStatus(obj) === 'warning'"
-                   [class.status-danger]="objectiveStatus(obj) === 'danger'">
-                <div class="obj-top">
-                  <div class="obj-info">
-                    <span class="obj-type">{{ objectiveLabel(obj) }}</span>
-                    @if (obj.category) { <span class="obj-cat">{{ obj.category }}</span> }
+          <div class="obj-group">
+            <div class="obj-group-header obj-group-header--savings">
+              <div class="ogh-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+              </div>
+              <div class="ogh-text">
+                <h5>Savings Goals</h5>
+                <p>Track how much you're saving each month</p>
+              </div>
+              <span class="ogh-count">{{ objectivesByType('MONTHLY_SAVINGS_GOAL').length }}</span>
+            </div>
+            <div class="objectives-grid">
+              @for (obj of objectivesByType('MONTHLY_SAVINGS_GOAL'); track obj.id) {
+                <div class="objective-card objective-card--savings"
+                     [class.status-good]="objectiveStatus(obj) === 'good'"
+                     [class.status-warning]="objectiveStatus(obj) === 'warning'"
+                     [class.status-danger]="objectiveStatus(obj) === 'danger'">
+                  <div class="obj-top">
+                    <div class="obj-info">
+                      <span class="obj-type">{{ obj.category || 'Monthly Savings' }}</span>
+                      <span class="obj-label">Savings Goal</span>
+                    </div>
+                    <div class="obj-status">
+                      @if (objectiveStatus(obj) === 'good') {
+                        <span class="status-badge status-good">Achieved</span>
+                      } @else if (objectiveStatus(obj) === 'warning') {
+                        <span class="status-badge status-warning">Halfway</span>
+                      } @else {
+                        <span class="status-badge status-danger">Behind</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="obj-progress">
+                    <div class="obj-bar-track">
+                      <div class="obj-bar-fill"
+                           [style.width.%]="objectiveProgress(obj)"
+                           [class.bar-good]="objectiveStatus(obj) === 'good'"
+                           [class.bar-warning]="objectiveStatus(obj) === 'warning'"
+                           [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
+                      <div class="obj-bar-threshold" [style.left.%]="50"></div>
+                    </div>
+                    <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
+                  </div>
+                  <div class="obj-amounts">
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Saved</span>
+                      <span class="oa-value oa-current">${{ obj.currentAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Goal</span>
+                      <span class="oa-value oa-target">${{ obj.targetAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Needed</span>
+                      <span class="oa-value" [class.text-green]="objectiveRemaining(obj) <= 0"
+                           [class.text-red]="objectiveRemaining(obj) > 0">
+                        ${{ objectiveRemaining(obj).toFixed(2) }}
+                      </span>
+                    </div>
                   </div>
                   @if (isViewingOwn) {
                     <div class="obj-actions">
-                      <button class="t-btn" (click)="openEditObjective(obj)" title="Edit">
+                      <button class="obj-action-btn" (click)="openEditObjective(obj)" title="Edit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button class="t-btn t-btn--danger" (click)="deleteObjective(obj)" title="Delete">
+                      <button class="obj-action-btn obj-action-btn--danger" (click)="deleteObjective(obj)" title="Delete">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -519,59 +623,84 @@
                     </div>
                   }
                 </div>
-                <div class="obj-progress">
-                  <div class="obj-bar-track">
-                    <div class="obj-bar-fill" [style.width.%]="objectiveProgress(obj)"
-                         [class.bar-good]="objectiveStatus(obj) === 'good'"
-                         [class.bar-warning]="objectiveStatus(obj) === 'warning'"
-                         [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
-                  </div>
-                  <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
-                </div>
-                <div class="obj-meta">
-                  <span class="obj-current">${{ obj.currentAmount.toFixed(2) }}</span>
-                  <span class="obj-sep">of</span>
-                  <span class="obj-target">${{ obj.targetAmount.toFixed(2) }}</span>
-                  <span class="obj-remaining">(${{ objectiveRemaining(obj).toFixed(2) }} needed)</span>
-                </div>
-                @if (objectiveStatus(obj) === 'danger') {
-                  <div class="obj-alert">⚠ Far from savings goal</div>
-                }
-                @if (objectiveStatus(obj) === 'good' && objectiveProgress(obj) === 100) {
-                  <div class="obj-alert obj-alert--success">✓ Savings goal achieved!</div>
-                }
-              </div>
-            }
+              }
+            </div>
           </div>
         }
 
         @if (objectivesByType('CATEGORY_LIMIT').length > 0) {
-          <div class="obj-group-header">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              <circle cx="12" cy="12" r="10"/>
-            </svg>
-            Category Limits
-          </div>
-          <div class="objectives-grid">
-            @for (obj of objectivesByType('CATEGORY_LIMIT'); track obj.id) {
-              <div class="objective-card" [class.status-good]="objectiveStatus(obj) === 'good'"
-                   [class.status-warning]="objectiveStatus(obj) === 'warning'"
-                   [class.status-danger]="objectiveStatus(obj) === 'danger'">
-                <div class="obj-top">
-                  <div class="obj-info">
-                    <span class="obj-type">{{ objectiveLabel(obj) }}</span>
-                    @if (obj.category) { <span class="obj-cat">{{ obj.category }}</span> }
+          <div class="obj-group">
+            <div class="obj-group-header obj-group-header--category">
+              <div class="ogh-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  <circle cx="12" cy="12" r="10"/>
+                </svg>
+              </div>
+              <div class="ogh-text">
+                <h5>Category Limits</h5>
+                <p>Per-category spending limits for detailed control</p>
+              </div>
+              <span class="ogh-count">{{ objectivesByType('CATEGORY_LIMIT').length }}</span>
+            </div>
+            <div class="objectives-grid">
+              @for (obj of objectivesByType('CATEGORY_LIMIT'); track obj.id) {
+                <div class="objective-card objective-card--category"
+                     [class.status-good]="objectiveStatus(obj) === 'good'"
+                     [class.status-warning]="objectiveStatus(obj) === 'warning'"
+                     [class.status-danger]="objectiveStatus(obj) === 'danger'">
+                  <div class="obj-top">
+                    <div class="obj-info">
+                      <span class="obj-type">{{ obj.category || 'Category' }}</span>
+                      <span class="obj-label">Category Limit</span>
+                    </div>
+                    <div class="obj-status">
+                      @if (objectiveStatus(obj) === 'good') {
+                        <span class="status-badge status-good">On Track</span>
+                      } @else if (objectiveStatus(obj) === 'warning') {
+                        <span class="status-badge status-warning">Warning</span>
+                      } @else {
+                        <span class="status-badge status-danger">Exceeded</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="obj-progress">
+                    <div class="obj-bar-track">
+                      <div class="obj-bar-fill"
+                           [style.width.%]="objectiveProgress(obj)"
+                           [class.bar-good]="objectiveStatus(obj) === 'good'"
+                           [class.bar-warning]="objectiveStatus(obj) === 'warning'"
+                           [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
+                      <div class="obj-bar-threshold" [style.left.%]="85"></div>
+                    </div>
+                    <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
+                  </div>
+                  <div class="obj-amounts">
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Spent</span>
+                      <span class="oa-value oa-current">${{ obj.currentAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Limit</span>
+                      <span class="oa-value oa-target">${{ obj.targetAmount.toFixed(2) }}</span>
+                    </div>
+                    <div class="obj-amount-block">
+                      <span class="oa-label">Remaining</span>
+                      <span class="oa-value" [class.text-green]="objectiveRemaining(obj) > 0"
+                           [class.text-red]="objectiveRemaining(obj) <= 0">
+                        ${{ objectiveRemaining(obj).toFixed(2) }}
+                      </span>
+                    </div>
                   </div>
                   @if (isViewingOwn) {
                     <div class="obj-actions">
-                      <button class="t-btn" (click)="openEditObjective(obj)" title="Edit">
+                      <button class="obj-action-btn" (click)="openEditObjective(obj)" title="Edit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                       </button>
-                      <button class="t-btn t-btn--danger" (click)="deleteObjective(obj)" title="Delete">
+                      <button class="obj-action-btn obj-action-btn--danger" (click)="deleteObjective(obj)" title="Delete">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -580,29 +709,8 @@
                     </div>
                   }
                 </div>
-                <div class="obj-progress">
-                  <div class="obj-bar-track">
-                    <div class="obj-bar-fill" [style.width.%]="objectiveProgress(obj)"
-                         [class.bar-good]="objectiveStatus(obj) === 'good'"
-                         [class.bar-warning]="objectiveStatus(obj) === 'warning'"
-                         [class.bar-danger]="objectiveStatus(obj) === 'danger'"></div>
-                  </div>
-                  <span class="obj-pct">{{ objectiveProgress(obj) }}%</span>
-                </div>
-                <div class="obj-meta">
-                  <span class="obj-current">${{ obj.currentAmount.toFixed(2) }}</span>
-                  <span class="obj-sep">of</span>
-                  <span class="obj-target">${{ obj.targetAmount.toFixed(2) }}</span>
-                  <span class="obj-remaining">(${{ objectiveRemaining(obj).toFixed(2) }} remaining)</span>
-                </div>
-                @if (objectiveStatus(obj) === 'danger') {
-                  <div class="obj-alert">⚠ Over budget!</div>
-                }
-                @if (objectiveStatus(obj) === 'good' && objectiveProgress(obj) === 100) {
-                  <div class="obj-alert obj-alert--success">✓ Within budget</div>
-                }
-              </div>
-            }
+              }
+            </div>
           </div>
         }
       </div>
