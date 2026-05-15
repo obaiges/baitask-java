@@ -34,7 +34,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     tap(event => saveNewToken(event, authService)),
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 403 && authService.hasRefreshToken()) {
+      if ((error.status === 403 || error.status === 0) && authService.hasRefreshToken()) {
         return refreshAccessToken(authService).pipe(
           switchMap(newToken => {
             if (!newToken) {

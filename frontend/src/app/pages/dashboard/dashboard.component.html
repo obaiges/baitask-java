@@ -61,6 +61,23 @@
         </a>
       }
     </div>
+
+    <div class="widgets-section">
+      <div class="widgets-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="4" rx="1"/>
+          <rect x="14" y="10" width="7" height="11" rx="1"/>
+          <rect x="3" y="13" width="7" height="8" rx="1"/>
+        </svg>
+        <span>Widgets</span>
+      </div>
+      <div class="widgets-grid">
+        @if (monthlySummary) {
+          <app-profit-widget [amount]="monthlySummary.profit" />
+        }
+      </div>
+    </div>
   }
 
   <router-outlet />

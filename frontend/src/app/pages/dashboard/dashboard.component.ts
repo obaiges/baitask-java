@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
+import { ProfitWidgetComponent } from '../../components/widgets/profit-widget.component';
 import { AuthService } from '../../services/auth.service';
+import { MoneyService } from './sections/money/money.service';
 import { filter } from 'rxjs';
+import { TransactionSummary } from './sections/money/money.models';
 
 interface Section {
   id: string;
@@ -15,13 +18,14 @@ interface Section {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NavbarComponent, RouterOutlet, RouterLink],
+  imports: [NavbarComponent, RouterOutlet, RouterLink, ProfitWidgetComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
   showMenu = true;
   username: string | null;
+  monthlySummary: TransactionSummary | null = null;
 
   sections: Section[] = [
     {
@@ -56,9 +60,12 @@ export class DashboardComponent implements OnInit {
     },
   ];
 
+  now = new Date();
+
   constructor(
     private router: Router,
     private authService: AuthService,
+    private moneyService: MoneyService,
   ) {
     this.username = this.authService.getUsername();
   }
@@ -66,10 +73,19 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.showMenu = this.router.url === '/dashboard';
 
+    this.loadMonthlyProfit();
+
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
         this.showMenu = this.router.url === '/dashboard';
+        if (this.showMenu) this.loadMonthlyProfit();
       });
+  }
+
+  private loadMonthlyProfit(): void {
+    const y = this.now.getFullYear();
+    const m = this.now.getMonth() + 1;
+    this.moneyService.getSummary(y, m).subscribe(s => this.monthlySummary = s);
   }
 }

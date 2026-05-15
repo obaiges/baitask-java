@@ -123,13 +123,18 @@ export class MoneyComponent implements OnInit {
   prevMonth(): void {
     if (this.selectedMonth === 1) { this.selectedMonth = 12; this.selectedYear--; }
     else { this.selectedMonth--; }
-    this.loadDashboard();
+    this.loadData();
   }
 
   nextMonth(): void {
     if (this.selectedMonth === 12) { this.selectedMonth = 1; this.selectedYear++; }
     else { this.selectedMonth++; }
-    this.loadDashboard();
+    this.loadData();
+  }
+
+  private loadData(): void {
+    if (this.activeTab === 'dashboard') this.loadDashboard();
+    else if (this.activeTab === 'objectives') this.loadObjectives();
   }
 
   maxCategoryAmount(categories: { amount: number }[]): number {
@@ -284,6 +289,10 @@ export class MoneyComponent implements OnInit {
   objectiveProgress(obj: Objective): number {
     if (obj.targetAmount <= 0) return 0;
     return Math.min(Math.round((obj.currentAmount / obj.targetAmount) * 100), 100);
+  }
+
+  objectivesByType(type: string): Objective[] {
+    return this.objectives.filter(o => o.type === type);
   }
 
   objectiveStatus(obj: Objective): 'good' | 'warning' | 'danger' {
