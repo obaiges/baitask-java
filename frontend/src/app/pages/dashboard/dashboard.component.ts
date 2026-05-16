@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar.component';
 import { ProfitWidgetComponent } from '../../components/widgets/profit-widget.component';
+import { ScheduleWidgetComponent } from '../../components/widgets/schedule-widget.component';
 import { AuthService } from '../../services/auth.service';
 import { MoneyService } from './sections/money/money.service';
 import { filter } from 'rxjs';
@@ -18,7 +19,7 @@ interface Section {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [NavbarComponent, RouterOutlet, RouterLink, ProfitWidgetComponent],
+  imports: [NavbarComponent, RouterOutlet, RouterLink, ProfitWidgetComponent, ScheduleWidgetComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })

@@ -20,8 +20,7 @@ export const routes: Routes = [
       },
       {
         path: 'schedule',
-        loadComponent: () => import('./pages/dashboard/sections/section-placeholder.component').then(m => m.SectionPlaceholderComponent),
-        data: { title: 'Schedule', description: 'Meetings, events, and important tasks', icon: 'calendar', color: '#f59e0b' },
+        loadComponent: () => import('./pages/dashboard/sections/schedule/schedule.component').then(m => m.ScheduleComponent),
       },
       {
         path: 'daily',
